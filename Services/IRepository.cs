@@ -21,5 +21,13 @@ namespace ImportRobot.Services
         void UpdatePhotoAlbums(string domain);
 
         void UpdateVideo(string domain);
+
+        void UpdateMaterialsAliases(string domain);
+
+        void UpdateCalendarAliases(string domain);
+
+        void UpdateMemoryAliases(string domain);
+
+        void UpdateLawsAliases(string domain);
     }
 }

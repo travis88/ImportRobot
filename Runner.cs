@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ImportRobot
 {
+    /// <summary>
+    /// Основная бизнес-логика
+    /// </summary>
     public class Runner 
     {
         private readonly ILogger<Runner> _logger;
@@ -30,13 +33,14 @@ namespace ImportRobot
             {
                 Console.WriteLine("Enter a domain name:");
                 domain = Console.ReadLine();
-                // domain = "minzdrav"; 
-
             } while(!correctDomains.Contains(domain));
 
             Materials(domain);
             Laws(domain);
             PhotoAlbums(domain);
+            Video(domain);
+            Calendar(domain);
+            Memory(domain);
         }
 
         /// <summary>
@@ -50,11 +54,21 @@ namespace ImportRobot
                 _repo.UpdateMaterialsPhoto(domain);
                 int count = _repo.Save();
                 if (count >= 0)
-                {
                     _logger.LogDebug($"{count} photos in main_materials updated for {domain}"); 
-                }
             }
             catch (Exception e) 
+            {
+                _logger.LogError(e.ToString());
+            }
+
+            try
+            {
+                _repo.UpdateMaterialsAliases(domain);
+                int count = _repo.Save();
+                if (count >= 0)
+                    _logger.LogDebug($"{count} aliases in main_materials updated for {domain}"); 
+            }
+            catch (Exception e)
             {
                 _logger.LogError(e.ToString());
             }
@@ -71,11 +85,21 @@ namespace ImportRobot
                 _repo.UpdateLawsAttachedFile(domain);
                 int count = _repo.Save();
                 if (count >= 0)
-                {
                     _logger.LogDebug($"{count} files in cms_laws updated for {domain}"); 
-                }
             }
             catch (Exception e) 
+            {
+                _logger.LogError(e.ToString());
+            }
+
+            try
+            {
+                _repo.UpdateLawsAliases(domain);
+                int count = _repo.Save();
+                if (count >= 0)
+                    _logger.LogDebug($"{count} aliases in cms_laws updated for {domain}"); 
+            }
+            catch (Exception e)
             {
                 _logger.LogError(e.ToString());
             }
@@ -92,9 +116,7 @@ namespace ImportRobot
                 _repo.UpdatePhotoAlbums(domain);
                 int count = _repo.Save();
                 if (count >= 0)
-                {
                     _logger.LogDebug($"{count} records in main_photo_albums updated for {domain}"); 
-                }
             }
             catch (Exception e) 
             {
@@ -113,11 +135,47 @@ namespace ImportRobot
                 _repo.UpdateVideo(domain);
                 int count = _repo.Save();
                 if (count >= 0)
-                {
                     _logger.LogDebug($"{count} records in main_video updated for {domain}"); 
-                }
             }
             catch (Exception e) 
+            {
+                _logger.LogError(e.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Обновляет данные в таблице portal.main_calendar
+        /// </summary>
+        /// <param name="domain"></param>
+        private void Calendar(string domain)
+        {
+            try
+            {
+                _repo.UpdateCalendarAliases(domain);
+                int count = _repo.Save();
+                if (count >= 0)
+                    _logger.LogDebug($"{count} aliases in portal.main_calendar updated for {domain}"); 
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Обновляет данные в таблице portal.main_memory
+        /// </summary>
+        /// <param name="domain"></param>
+        private void Memory(string domain)
+        {
+            try
+            {
+                _repo.UpdateMemoryAliases(domain);
+                int count = _repo.Save();
+                if (count >= 0)
+                    _logger.LogDebug($"{count} aliases in portal.main_memory updated for {domain}"); 
+            }
+            catch (Exception e)
             {
                 _logger.LogError(e.ToString());
             }
