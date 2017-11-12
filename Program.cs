@@ -22,7 +22,12 @@ namespace ImportRobot
             var serviceProvider = ConfigureServices(services);
 
             var runner = serviceProvider.GetRequiredService<Runner>();
-            runner.DoAction("Action1");
+            
+            runner.DoAction();
+
+            Console.WriteLine("Import completed.");
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
         }
 
         private static IServiceProvider ConfigureServices(IServiceCollection services)

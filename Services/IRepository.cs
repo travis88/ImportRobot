@@ -8,6 +8,18 @@ namespace ImportRobot.Services
     /// </summary>
     public interface IRepository
     {
-        int GetMaterialsCount();
+        int Save();
+
+        string[] GetCorrectDomains();
+
+        string ReplaceIt(string change);
+
+        void UpdateMaterialsPhoto(string domain);
+
+        void UpdateLawsAttachedFile(string domain);
+
+        void UpdatePhotoAlbums(string domain);
+
+        void UpdateVideo(string domain);
     }
 }
