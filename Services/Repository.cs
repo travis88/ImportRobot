@@ -1,9 +1,10 @@
+using System;
 using System.Linq;
-using System.Threading.Tasks;
-using ImportRobot.Entities;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using ImportRobot.Entities;
 
 namespace ImportRobot.Services
 {
@@ -218,50 +219,54 @@ namespace ImportRobot.Services
 
             foreach (var a in albums)
             {
-                string directory = null;
-
-                directory = a.COldUrl;
-                if (!string.IsNullOrEmpty(directory))
+                try
                 {
-                    directory = directory.Replace("/", @"\")
-                                         .Replace(@"\UserFiles", @"\\gov2\G$")
-                                         .Replace(@"\ContentOld", @"\\GOV2\H$");
-                    
-                    string directorPath = directory;
-                    if (Directory.Exists(directorPath))
+                    string directory = null;
+
+                    directory = a.COldUrl;
+                    if (!string.IsNullOrEmpty(directory))
                     {
-                        DirectoryInfo di = new DirectoryInfo(directorPath);
-                        FileInfo[] fi = di.GetFiles();
-                        string year = a.DDate.ToString("yyyy");
-                        string month = a.DDate.ToString("MM");
-                        string day = a.DDate.ToString("dd");
-                        string userFiles = Program.Configuration.GetSection("root").ToString(); 
-                        string photoDir = Program.Configuration.GetSection("photo").ToString();
-                        string pathToApp = ""; // TODO
-
-                        // путь для сохранения фотографий
-                        string savePath = userFiles + domain + photoDir
-                                          + year + "_" + month + "/" + day + "/" + a.Id + "/"; 
+                        directory = directory.Replace("/", @"\")
+                                            .Replace(@"\UserFiles", @"\\gov2\g$")
+                                            .Replace(@"\ContentOld", @"\\gov2\h$");
                         
-                        if (!Directory.Exists(savePath))
+                        string directorPath = directory;
+                        if (Directory.Exists(directorPath))
                         {
-                            DirectoryInfo _di = Directory.CreateDirectory(pathToApp + savePath);
-                        }
+                            DirectoryInfo di = new DirectoryInfo(directorPath);
+                            FileInfo[] fi = di.GetFiles();
+                            string year = a.DDate.ToString("yyyy");
+                            string month = a.DDate.ToString("MM");
+                            string day = a.DDate.ToString("dd");
+                            string userFiles = Program.Configuration.GetSection("root").ToString(); 
+                            string photoDir = Program.Configuration.GetSection("photo").ToString();
+                            string pathToApp = ""; // TODO
 
-                        int count = 0;
-                        foreach (var img in fi)
-                        {
-                            if (allowedExtensions.Contains(img.Extension))
+                            // путь для сохранения фотографий
+                            string savePath = userFiles + domain + photoDir
+                                            + year + "_" + month + "/" + day + "/" + a.Id + "/"; 
+                            
+                            if (!Directory.Exists(savePath))
                             {
-                                count++;
-                                if (!img.Name.ToLower().Contains("_preview"))
-                                {
+                                DirectoryInfo _di = Directory.CreateDirectory(pathToApp + savePath);
+                            }
 
+                            int count = 0;
+                            foreach (var img in fi)
+                            {
+                                if (allowedExtensions.Contains(img.Extension))
+                                {
+                                    count++;
+                                    if (!img.Name.ToLower().Contains("_preview"))
+                                    {
+
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                catch (Exception e) {}
             }
         }
     }
