@@ -2,6 +2,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using ImportRobot.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.IO;
 
 namespace ImportRobot.Services
 {
@@ -125,7 +127,7 @@ namespace ImportRobot.Services
         }
         
         /// <summary>
-        /// Трансилитерируем алиасы для новостей
+        /// Трансилитерирует алиасы для новостей
         /// </summary>
         /// <param name="domain"></param>
         public void UpdateMaterialsAliases(string domain)
@@ -142,7 +144,7 @@ namespace ImportRobot.Services
         }
 
         /// <summary>
-        /// Транслитерируем алиасы для календаря
+        /// Транслитерирует алиасы для календаря
         /// </summary>
         /// <param name="domain"></param>
         public void UpdateCalendarAliases(string domain)
@@ -159,7 +161,7 @@ namespace ImportRobot.Services
         }
 
         /// <summary>
-        /// Транслитерируем алиасы для памятных дней
+        /// Транслитерирует алиасы для памятных дней
         /// </summary>
         /// <param name="domain"></param>
         public void UpdateMemoryAliases(string domain)
@@ -176,7 +178,7 @@ namespace ImportRobot.Services
         }
 
         /// <summary>
-        /// Транслитерируем алиасы для закондательства
+        /// Транслитерирует алиасы для закондательства
         /// </summary>
         /// <param name="domain"></param>
         public void UpdateLawsAliases(string domain)
@@ -198,6 +200,67 @@ namespace ImportRobot.Services
                         title = title.Substring(0, 30);
 
                     l.CAlias = group + "-" + Transliteration.Translit(title).Replace("/", "").Replace(" ", "-").ToLower();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Переносит старые фотографии на новый диск
+        /// </summary>
+        public void TakeOldPhotoAlbums(string domain)
+        {
+            string[] allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" };
+
+            var albums = _db.MainPhotoAlbums
+                .Where(w => w.FSite.Equals(domain));
+
+            if (albums == null) return;
+
+            foreach (var a in albums)
+            {
+                string directory = null;
+
+                directory = a.COldUrl;
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    directory = directory.Replace("/", @"\")
+                                         .Replace(@"\UserFiles", @"\\gov2\G$")
+                                         .Replace(@"\ContentOld", @"\\GOV2\H$");
+                    
+                    string directorPath = directory;
+                    if (Directory.Exists(directorPath))
+                    {
+                        DirectoryInfo di = new DirectoryInfo(directorPath);
+                        FileInfo[] fi = di.GetFiles();
+                        string year = a.DDate.ToString("yyyy");
+                        string month = a.DDate.ToString("MM");
+                        string day = a.DDate.ToString("dd");
+                        string userFiles = Program.Configuration.GetSection("root").ToString(); 
+                        string photoDir = Program.Configuration.GetSection("photo").ToString();
+                        string pathToApp = ""; // TODO
+
+                        // путь для сохранения фотографий
+                        string savePath = userFiles + domain + photoDir
+                                          + year + "_" + month + "/" + day + "/" + a.Id + "/"; 
+                        
+                        if (!Directory.Exists(savePath))
+                        {
+                            DirectoryInfo _di = Directory.CreateDirectory(pathToApp + savePath);
+                        }
+
+                        int count = 0;
+                        foreach (var img in fi)
+                        {
+                            if (allowedExtensions.Contains(img.Extension))
+                            {
+                                count++;
+                                if (!img.Name.ToLower().Contains("_preview"))
+                                {
+
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

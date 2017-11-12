@@ -29,5 +29,7 @@ namespace ImportRobot.Services
         void UpdateMemoryAliases(string domain);
 
         void UpdateLawsAliases(string domain);
+
+        void TakeOldPhotoAlbums(string domain);
     }
 }
