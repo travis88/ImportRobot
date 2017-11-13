@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using ImportRobot.Entities;
 
 namespace ImportRobot.Services
 {
@@ -31,5 +32,7 @@ namespace ImportRobot.Services
         void UpdateLawsAliases(string domain);
 
         void TakeOldPhotoAlbums(string domain);
+
+        int SavePhotoToAlbum(MainPhotos photo);
     }
 }

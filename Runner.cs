@@ -12,11 +12,12 @@ namespace ImportRobot
     public class Runner 
     {
         private readonly ILogger<Runner> _logger;
-        private IRepository _repo = new Repository(new CapDbContext());
+        private IRepository _repo;
 
         public Runner(ILogger<Runner> logger)
         {
             _logger = logger;
+            _repo = new Repository(new CapDbContext());
         }
 
         /// <summary>

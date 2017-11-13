@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using ImportRobot.Entities;
+using SixLabors.ImageSharp;
+using ImportRobot.Models;
 
 namespace ImportRobot.Services
 {
@@ -210,7 +212,14 @@ namespace ImportRobot.Services
         /// </summary>
         public void TakeOldPhotoAlbums(string domain)
         {
-            string[] allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" };
+            // допустимые разрешения
+            string[] allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" }; 
+            
+            // кол-во фотографий
+            int allPhotosCount = 0;
+
+            // кол-во фотоальбомов
+            int allPhotoAlbumsCount = 0;
 
             var albums = _db.MainPhotoAlbums
                 .Where(w => w.FSite.Equals(domain));
@@ -219,55 +228,84 @@ namespace ImportRobot.Services
 
             foreach (var a in albums)
             {
-                try
+                string directory = null;
+
+                directory = a.COldUrl;
+                if (!string.IsNullOrEmpty(directory))
                 {
-                    string directory = null;
-
-                    directory = a.COldUrl;
-                    if (!string.IsNullOrEmpty(directory))
-                    {
-                        directory = directory.Replace("/", @"\")
-                                            .Replace(@"\UserFiles", @"\\gov2\g$")
-                                            .Replace(@"\ContentOld", @"\\gov2\h$");
+                    directory = directory.Replace("/", @"\")
+                                        .Replace(@"\UserFiles", @"\\gov2\g$")
+                                        .Replace(@"\ContentOld", @"\\gov2\h$");
                         
-                        string directorPath = directory;
-                        if (Directory.Exists(directorPath))
-                        {
-                            DirectoryInfo di = new DirectoryInfo(directorPath);
-                            FileInfo[] fi = di.GetFiles();
-                            string year = a.DDate.ToString("yyyy");
-                            string month = a.DDate.ToString("MM");
-                            string day = a.DDate.ToString("dd");
-                            string userFiles = Program.Configuration.GetSection("root").ToString(); 
-                            string photoDir = Program.Configuration.GetSection("photo").ToString();
-                            string pathToApp = ""; // TODO
+                    string directorPath = directory;
+                    if (Directory.Exists(directorPath))
+                    {
+                        DirectoryInfo di = new DirectoryInfo(directorPath);
+                        FileInfo[] fi = di.GetFiles();
+                        string year = a.DDate.ToString("yyyy");
+                        string month = a.DDate.ToString("MM");
+                        string day = a.DDate.ToString("dd");
+                        string userFiles = Program.Configuration.GetSection("root").ToString(); 
+                        string photoDir = Program.Configuration.GetSection("photo").ToString();
+                        string pathToApp = Program.Configuration.GetSection("pathToApp").ToString();
 
-                            // путь для сохранения фотографий
-                            string savePath = userFiles + domain + photoDir
-                                            + year + "_" + month + "/" + day + "/" + a.Id + "/"; 
+                        // путь для сохранения фотографий
+                        string savePath = userFiles + domain + photoDir
+                                        + year + "_" + month + "/" + day + "/" + a.Id + "/"; 
                             
-                            if (!Directory.Exists(savePath))
-                            {
-                                DirectoryInfo _di = Directory.CreateDirectory(pathToApp + savePath);
-                            }
+                        if (!Directory.Exists(savePath))
+                        {
+                            DirectoryInfo _di = Directory.CreateDirectory(pathToApp + savePath);
+                        }
 
-                            int count = 0;
-                            foreach (var img in fi)
+                        int count = 0;
+                        foreach (var img in fi)
+                        {
+                            if (allowedExtensions.Contains(img.Extension))
                             {
-                                if (allowedExtensions.Contains(img.Extension))
+                                count++;
+                                if (!img.Name.ToLower().Contains("_preview"))
                                 {
-                                    count++;
-                                    if (!img.Name.ToLower().Contains("_preview"))
+                                    // превью
+                                    using (Image<Rgba32> _imgPrev = Image.Load(img.FullName))
                                     {
-
+                                        _imgPrev.Mutate(x => x
+                                            .Resize(120, 120));
+                                        _imgPrev.Save(pathToApp + savePath + "prev_" + count.ToString() + img.Extension); // automatic encoder selected based on extension.
                                     }
+
+                                    // изображение
+                                    using (Image<Rgba32> _imgReal = Image.Load(img.FullName))
+                                    {
+                                        _imgReal.Mutate(x => x
+                                            .Resize(120, 120));
+                                        _imgReal.Save(pathToApp + savePath + count.ToString() + img.Extension); // automatic encoder selected based on extension.
+                                    }
+
+                                    // сохраняем фотку по новому пути
+                                    var photo = new MainPhotos 
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        AlbumId = a.Id,
+                                        CTitle = count.ToString() + img.Extension,
+                                        DDate = img.LastWriteTime,
+                                        CPreview = pathToApp + savePath + "prev_" + count.ToString() + img.Extension,
+                                        CPhoto = pathToApp + savePath + count.ToString() + img.Extension
+                                    };
+                                    allPhotosCount += SavePhotoToAlbum(photo);
                                 }
                             }
                         }
                     }
                 }
-                catch (Exception e) {}
             }
+        }
+
+        // Прикрепляет фото к альбому
+        public int SavePhotoToAlbum(MainPhotos photo)
+        {
+            _db.MainPhotos.Add(photo);
+            return this.Save();
         }
     }
 }
